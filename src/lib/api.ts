@@ -8,7 +8,8 @@ import type {
   TimeRange,
 } from './types'
 
-const REQUEST_TIMEOUT_MS = 15_000
+// Staging analytics calls were measured at 9–27s under load (2026-10-26), so be generous.
+const REQUEST_TIMEOUT_MS = 45_000
 
 export class ApiError extends Error {
   readonly status: number

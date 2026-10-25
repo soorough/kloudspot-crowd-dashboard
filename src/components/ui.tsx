@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 /** White surface used by every dashboard panel. */
 export function Card({ title, actions, className = '', children }: {
@@ -47,4 +47,19 @@ export function EmptyState({ children }: { children: ReactNode }) {
 
 export function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : 'Something went wrong.'
+}
+
+/** Shown under a skeleton once loading passes `afterMs` — the staging API can take 10–30s under load. */
+export function SlowHint({ afterMs = 4000, className = '' }: { afterMs?: number; className?: string }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const id = setTimeout(() => setShow(true), afterMs)
+    return () => clearTimeout(id)
+  }, [afterMs])
+  if (!show) return null
+  return (
+    <p className={`text-xs text-ink-muted ${className}`} role="status">
+      Taking longer than usual — the server is busy. Still loading…
+    </p>
+  )
 }

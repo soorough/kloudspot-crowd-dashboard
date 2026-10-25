@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useApi } from '../../auth/session'
 import { PageHeader } from '../../components/PageHeader'
-import { EmptyState, ErrorState, Skeleton, errorMessage } from '../../components/ui'
+import { EmptyState, ErrorState, Skeleton, SlowHint, errorMessage } from '../../components/ui'
 import { formatClock, formatDwellShort } from '../../lib/time'
 import type { EntryRecord } from '../../lib/types'
 import { useDashboard } from '../../sites/dashboard'
@@ -115,6 +115,7 @@ function EntriesTable({ rows, timeZone }: { rows: EntryRecord[] | null; timeZone
             : rows.map((r) => <EntryRow key={`${r.personId}-${r.entryUtc}`} record={r} timeZone={timeZone} />)}
         </tbody>
       </table>
+      {rows === null && <SlowHint className="px-4 py-3" />}
     </div>
   )
 }

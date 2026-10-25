@@ -1,14 +1,16 @@
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { SessionProvider, useSession } from '../auth/session'
 import { API_BASE_URL } from '../config'
-import { EntriesPage } from '../features/entries/EntriesPage'
 import { LoginPage } from '../features/login/LoginPage'
-import { OverviewPage } from '../features/overview/OverviewPage'
 import { LiveProvider, createSocketIo, type SocketFactory } from '../live/live'
 import { DashboardProvider } from '../sites/dashboard'
 import { Shell } from './Shell'
+
+// Route-level code splitting keeps Recharts out of the login bundle.
+const OverviewPage = lazy(() => import('../features/overview/OverviewPage').then((m) => ({ default: m.OverviewPage })))
+const EntriesPage = lazy(() => import('../features/entries/EntriesPage').then((m) => ({ default: m.EntriesPage })))
 
 export interface AppProps {
   baseUrl?: string
@@ -21,7 +23,7 @@ export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        retry: (count, err) => count < 2 && !(err && 'status' in err && (err as { status: number }).status === 401),
+        retry: (count, err) => count < 1 && !(err && 'status' in err && (err as { status: number }).status === 401),
         refetchOnWindowFocus: false,
         staleTime: 60_000,
       },

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useSession } from '../auth/session'
 import { ChevronDownIcon, EntriesIcon, HomeIcon, KloudspotLogo, MenuIcon, PinIcon, PowerIcon } from '../components/icons'
@@ -80,7 +80,9 @@ export function Shell() {
           {sitesStatus === 'error' ? (
             <ErrorState message="Couldn't load your sites." onRetry={retrySites} />
           ) : site ? (
-            <Outlet />
+            <Suspense fallback={<PageFallback />}>
+              <Outlet />
+            </Suspense>
           ) : (
             <div className="space-y-4" aria-busy="true">
               <Skeleton className="h-8 w-48" />
@@ -90,6 +92,15 @@ export function Shell() {
           )}
         </main>
       </div>
+    </div>
+  )
+}
+
+function PageFallback() {
+  return (
+    <div className="space-y-4" aria-busy="true">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-72 w-full" />
     </div>
   )
 }

@@ -2,7 +2,7 @@ import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { TrendDownIcon, TrendUpIcon } from '../../components/icons'
-import { Card, EmptyState, ErrorState, Skeleton, errorMessage } from '../../components/ui'
+import { Card, EmptyState, ErrorState, Skeleton, SlowHint, errorMessage } from '../../components/ui'
 import { formatDwellLong, formatHour, percentChange, type DayWindows } from '../../lib/time'
 import type { Site } from '../../lib/types'
 import { useDashboard } from '../../sites/dashboard'
@@ -192,6 +192,7 @@ function Stat({
       <div className="flex flex-col gap-2" aria-label={`Loading ${label}`}>
         <Skeleton className="h-8 w-28" />
         <Skeleton className="h-4 w-40" />
+        <SlowHint />
       </div>
     )
   } else if (query?.isError) {
@@ -242,7 +243,13 @@ function QueryBody({
   empty: string
   children: ReactNode
 }) {
-  if (query.isPending) return <Skeleton className={`w-full ${skeletonClass}`} />
+  if (query.isPending)
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className={`w-full ${skeletonClass}`} />
+        <SlowHint />
+      </div>
+    )
   if (query.isError)
     return <ErrorState message={`Couldn't load this chart. ${errorMessage(query.error)}`} onRetry={() => void query.refetch()} />
   if (isEmpty) return <EmptyState>{empty}</EmptyState>
