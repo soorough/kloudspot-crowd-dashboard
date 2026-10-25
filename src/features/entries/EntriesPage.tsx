@@ -69,7 +69,7 @@ export function EntriesPage() {
         </div>
         <div className="mt-4 flex flex-col-reverse items-center gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr]">
           <p className="text-sm text-ink-muted tabular-nums sm:justify-self-start">
-            Showing {first}–{last} of {data.totalRecords}
+            Showing {first.toLocaleString('en-US')}–{last.toLocaleString('en-US')} of {data.totalRecords.toLocaleString('en-US')}
           </p>
           <Pagination page={page} totalPages={data.totalPages} onChange={setPage} />
         </div>
