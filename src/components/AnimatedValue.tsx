@@ -20,7 +20,8 @@ export function AnimatedValue({ value, className = '' }: { value: string; classN
     if (!isFirst.current) setFlashKey((k) => k + 1)
     isFirst.current = false
 
-    if (target === null || prefersReducedMotion()) {
+    // Background tabs pause requestAnimationFrame; never leave a half-counted number behind.
+    if (target === null || prefersReducedMotion() || document.hidden) {
       setShown(value)
       if (target !== null) fromRef.current = target
       return
@@ -37,8 +38,15 @@ export function AnimatedValue({ value, className = '' }: { value: string; classN
       else fromRef.current = target
     }
     raf = requestAnimationFrame(tick)
+    // Safety net: land on the final value even if frames stop (tab hidden mid-animation).
+    const done = window.setTimeout(() => {
+      cancelAnimationFrame(raf)
+      setShown(format(target))
+      fromRef.current = target
+    }, duration + 150)
     return () => {
       cancelAnimationFrame(raf)
+      window.clearTimeout(done)
       fromRef.current = target
     }
   }, [value, target])
