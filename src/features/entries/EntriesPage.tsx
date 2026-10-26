@@ -142,7 +142,9 @@ function EntryRow({ record: r, timeZone, t }: { record: EntryRecord; timeZone: s
       </td>
       <td className="px-4">{sex}</td>
       <td className="px-4 whitespace-nowrap tabular-nums">{formatClock(r.entryUtc, timeZone)}</td>
-      <td className="px-4 whitespace-nowrap tabular-nums">{formatClock(r.exitUtc, timeZone)}</td>
+      <td className="px-4 whitespace-nowrap tabular-nums" title={inside ? t('entries.insideTitle') : undefined}>
+        {formatClock(r.exitUtc, timeZone)}
+      </td>
       <td className="px-4 tabular-nums">{formatDwellShort(r.dwellMinutes)}</td>
     </tr>
   )

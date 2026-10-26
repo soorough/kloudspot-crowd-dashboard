@@ -1,6 +1,6 @@
 # Spec: Kloudspot Crowd Management Dashboard
 
-Status: draft, waiting for seam confirmation · Deadline: Tue 27 Oct 2026, 7:00 PM IST
+Status: implemented · Deadline: Tue 27 Oct 2026, 7:00 PM IST
 
 ## Problem Statement
 
@@ -113,7 +113,7 @@ A global site picker sets which site every screen shows. A global day picker set
 - **Live stream**: a single Socket.IO connection, authenticated with the token. It exposes subscriptions filtered by site for `live_occupancy` and `alert`. `sim:event` duplicates `alert` and is ignored. The socket factory is injectable so tests can drive it.
 - **Overview data hooks**: footfall, dwell and occupancy for the selected and comparison windows, plus demographics. Live overlays merge socket data into the query cache: the current occupancy, the current-hour bucket, and footfall incremented on `zone-entry`.
 - **Alerts store**: a list of the 50 most recent alerts per site, an unread count, mark-read, and a toast trigger for `severity === "high"`.
-- **UI shell**: the sidebar, the top bar (site picker, day picker, language stub, bell, avatar) and the Alerts drawer.
+- **UI shell**: the sidebar, the top bar (site picker, day picker, language toggle, bell, avatar) and the Alerts drawer.
 
 **API contract, as observed on staging on 26 Oct 2026:**
 
@@ -157,7 +157,7 @@ A global site picker sets which site every screen shows. A global day picker set
 - Alerts appear in a right-side drawer of cards.
 - The Entries table follows the design exactly: no Zone column and no page-size control.
 - There is no yesterday line on the chart.
-- The En/ع toggle is a visual stub, with Arabic disabled.
+- The En/ع toggle switches the UI between English and Arabic with full RTL support (added after the initial spec).
 
 ## Testing Decisions
 
@@ -187,7 +187,6 @@ A global site picker sets which site every screen shows. A global day picker set
 
 ## Out of Scope
 
-- Arabic translation and RTL layout. The toggle is present but disabled.
 - Dark mode.
 - E2E browser tests.
 - Pixel-perfect styling beyond the Figma's layout, colours and type scale.

@@ -78,10 +78,16 @@ src/
 npm test
 ```
 
-There are 68 tests, built around two seams:
+There are 71 tests, built around two seams:
 
-1. **`renderApp()`** renders the real app with real providers and routing, with MSW at the network layer and a fake Socket.IO client that tests push events into. Login, redirects, live updates, alerts, pagination and error states are all tested the way a user sees them.
+1. **`renderApp()`** renders the real app with real providers and routing, with MSW at the network layer and a fake Socket.IO client that tests push events into. Login, redirects, live updates, alerts, pagination, error states and the English/Arabic switch are all tested the way a user sees them.
 2. **`src/lib/time.test.ts`** is a table of timezone boundaries (Dubai, Kolkata, Los Angeles, Tokyo, the DST changeover), comparison windows and duration formatting.
+
+## Security
+
+- **Protected routes:** every route except `/login` requires a session. A 401 response or an expired JWT ends the session; staging tokens last 1 hour.
+- **No token leaks:** tokens are never logged or put in URLs. The socket authenticates through the handshake `auth` field.
+- **Deployment headers:** the Vercel deployment sends a strict CSP (scripts from this origin only, with network access limited to the Kloudspot API and its socket), plus `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy.
 
 ## Run locally
 

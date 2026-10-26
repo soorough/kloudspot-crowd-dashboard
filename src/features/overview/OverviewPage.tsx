@@ -6,7 +6,7 @@ import { TrendDownIcon, TrendUpIcon } from '../../components/icons'
 import { Card, EmptyState, ErrorState, Skeleton, SlowHint } from '../../components/ui'
 import { formatDwellLong, formatHour, percentChange, type DayWindows } from '../../lib/time'
 import type { Site } from '../../lib/types'
-import { useI18n } from '../../i18n/i18n'
+import { useI18n, type Translate } from '../../i18n/i18n'
 import { useDashboard } from '../../sites/dashboard'
 import { COLORS, DemographicsChart, DemographicsDonut, LegendDot, OccupancyChart } from './charts'
 import { demographicShare, mean, visibleAxis, withLivePoint } from './metrics'
@@ -116,7 +116,7 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
               axis={chartAxis}
               timeZone={site.timezone}
               liveAt={liveAt}
-              label={occupancySummary(chartData, site.timezone, isToday)}
+              label={occupancySummary(chartData, site.timezone, isToday, t)}
             />
           </QueryBody>
         </Card>
@@ -164,9 +164,7 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
                 data={demoBuckets}
                 axis={chartAxis}
                 timeZone={site.timezone}
-                label={`Hourly average male and female counts across ${demoBuckets.length} hours${
-                  share ? `; overall ${share.male}% male, ${share.female}% female` : ''
-                }`}
+                label={`${t('overview.demoSummary', { hours: demoBuckets.length })}${share ? t('overview.demoShare', { m: share.male, f: share.female }) : ''}`}
               />
             </QueryBody>
           </Card>
@@ -176,14 +174,23 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
   )
 }
 
-function occupancySummary(data: { utc: number; avg: number }[], timeZone: string, isToday: boolean) {
-  if (data.length === 0) return 'Hourly occupancy: no data'
+function occupancySummary(
+  data: { utc: number; avg: number }[],
+  timeZone: string,
+  isToday: boolean,
+  t: Translate,
+) {
+  if (data.length === 0) return t('overview.occNoData')
   const peak = data.reduce((a, b) => (b.avg > a.avg ? b : a))
   const last = data[data.length - 1]
-  return `Hourly average occupancy across ${data.length} hours. Peak ${fmt(peak.avg)} at ${formatHour(
-    peak.utc,
-    timeZone,
-  )}. ${isToday ? 'Latest' : 'Last'} ${fmt(last.avg)} at ${formatHour(last.utc, timeZone)}.`
+  return t('overview.occSummary', {
+    hours: data.length,
+    peak: fmt(peak.avg),
+    peakAt: formatHour(peak.utc, timeZone),
+    latestLabel: t(isToday ? 'overview.latest' : 'overview.last'),
+    last: fmt(last.avg),
+    lastAt: formatHour(last.utc, timeZone),
+  })
 }
 
 function Stat({

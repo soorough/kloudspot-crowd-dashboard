@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { io } from 'socket.io-client'
 import type { LiveEventMap } from '../lib/types'
 
@@ -86,7 +86,10 @@ export function useLiveEvent<E extends keyof LiveEventMap>(
 ) {
   const { socket } = useContext(LiveContext)
   const handlerRef = useRef(handler)
-  handlerRef.current = handler
+  // Keep the latest handler without resubscribing; updated after render, before events fire.
+  useLayoutEffect(() => {
+    handlerRef.current = handler
+  })
 
   useEffect(() => {
     if (!socket) return
