@@ -72,3 +72,8 @@ npm run dev
 - **Dark mode and end-to-end browser tests.**
 - **Zone-level drill-down.** `zoneOccupancy` arrives on the socket but isn't shown yet.
 - **Page size.** The Crowd Entries page uses a fixed 10 per page, matching the design.
+
+## Credits
+
+- Kloudspot logo and the sidebar / login-card line patterns are exported unchanged from Kloudspot's Figma file (`src/assets/figma/`).
+- Login background photo: [Pexels #20988575](https://www.pexels.com/photo/monitors-on-desks-in-office-20988575/) (Pexels License). It's converted to greyscale WebP to match the Figma treatment. The original Figma photo is an image fill that view-only accounts can't export.

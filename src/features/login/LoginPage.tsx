@@ -4,9 +4,13 @@ import { EyeIcon, EyeOffIcon, KloudspotLogo } from '../../components/icons'
 import { errorMessage } from '../../components/ui'
 import { OfficeBackdrop } from './OfficeBackdrop'
 
+// Figma: outlined 43px field, #E3E3E3 border, label notched into the top border.
 const inputClass =
-  'block w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-muted/60 ' +
-  'outline-none transition-shadow focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 disabled:bg-page'
+  'peer block h-[43px] w-full rounded border border-[#e3e3e3] bg-white px-3 text-sm text-black placeholder:text-[#b5b5b5] ' +
+  'outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-page'
+
+const notchedLabelClass =
+  'absolute -top-2 left-2.5 bg-white px-1 text-xs leading-4 text-[#8e8e8e] peer-focus:text-brand-600'
 
 /**
  * Login screen (SPEC stories 1–5, 10). Redirect after success is owned by `LoginRoute`;
@@ -61,11 +65,11 @@ export function LoginPage() {
   }
 
   return (
-    <main className="relative isolate flex min-h-full items-center overflow-hidden bg-brand-900">
+    <main className="relative isolate flex min-h-full items-center overflow-hidden bg-[#2b2b2b]">
       <OfficeBackdrop />
 
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-center gap-12 px-4 py-10 min-[900px]:justify-between min-[900px]:px-12 xl:px-20">
-        <h1 className="hidden text-[2rem] leading-tight font-medium text-white drop-shadow-sm min-[900px]:block xl:text-[2.25rem]">
+        <h1 className="hidden text-[2rem] leading-[1.25] font-semibold tracking-[0.01em] text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.35)] min-[900px]:block xl:text-[2.4rem]">
           Welcome to the
           <br />
           Crowd Management System
@@ -73,17 +77,14 @@ export function LoginPage() {
 
         <section
           aria-label="Sign in"
-          className="w-full max-w-[340px] shrink-0 overflow-hidden rounded-xl bg-white shadow-2xl shadow-black/40"
+          className="w-full max-w-[360px] shrink-0 overflow-hidden rounded-lg bg-white shadow-2xl shadow-black/40"
         >
-          <header className="sidebar-bg flex items-center justify-center py-6 text-white">
+          <header className="card-header-bg flex h-[108px] items-center justify-center">
             <KloudspotLogo />
           </header>
 
-          <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4 px-6 pt-6 pb-7">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor={emailId} className="text-xs font-medium text-ink-muted">
-                Log In <span className="text-down">*</span>
-              </label>
+          <form noValidate onSubmit={onSubmit} className="flex flex-col px-6 pt-6 pb-6">
+            <div className="relative">
               <input
                 id={emailId}
                 name="email"
@@ -98,52 +99,53 @@ export function LoginPage() {
                 required
                 className={inputClass}
               />
+              <label htmlFor={emailId} className={notchedLabelClass}>
+                Log In *
+              </label>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor={passwordId} className="text-xs font-medium text-ink-muted">
-                Password <span className="text-down">*</span>
+            <div className="relative mt-[22px]">
+              <input
+                id={passwordId}
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={edit(setPassword)}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? errorId : undefined}
+                required
+                className={`${inputClass} pr-11`}
+              />
+              <label htmlFor={passwordId} className={notchedLabelClass}>
+                Password *
               </label>
-              <div className="relative">
-                <input
-                  id={passwordId}
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={edit(setPassword)}
-                  aria-invalid={error ? true : undefined}
-                  aria-describedby={error ? errorId : undefined}
-                  required
-                  className={`${inputClass} pr-10`}
-                />
-                {/*
-                  Name comes from visually hidden text, not aria-label, so `getByLabelText(/password/i)`
-                  keeps resolving to the input alone.
-                */}
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-pressed={showPassword}
-                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500"
-                >
-                  {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
-                  <span className="sr-only">{showPassword ? 'Hide password' : 'Show password'}</span>
-                </button>
-              </div>
+              {/*
+                Name comes from visually hidden text, not aria-label, so `getByLabelText(/password/i)`
+                keeps resolving to the input alone.
+              */}
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r text-ink hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500"
+              >
+                {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+                <span className="sr-only">{showPassword ? 'Hide password' : 'Show password'}</span>
+              </button>
             </div>
 
             <button
               type="submit"
               disabled={pending}
               aria-busy={pending || undefined}
-              className="mt-2 w-full rounded-md bg-brand-500 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-4 h-[42px] w-full rounded-md bg-brand-500 text-base text-white transition-colors hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {pending ? 'Signing in…' : 'Login'}
             </button>
 
-            <p id={errorId} role="alert" className="min-h-5 text-center text-sm text-down">
+            <p id={errorId} role="alert" className="mt-3 text-center text-sm text-down empty:mt-0">
               {error}
             </p>
           </form>

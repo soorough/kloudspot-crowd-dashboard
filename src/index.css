@@ -11,10 +11,10 @@
   --color-brand-50: #eaf5f4;
   --color-brand-100: #d3ebe9;
   --color-brand-300: #8fd3cc;
-  --color-brand-500: #4a9e99;
-  --color-brand-600: #3a8580;
-  --color-brand-800: #1e4e4c;
-  --color-brand-900: #133534;
+  --color-brand-500: #41928f;
+  --color-brand-600: #367c79;
+  --color-brand-800: #0a5d5c;
+  --color-brand-900: #282829;
 
   --color-up: #3b9b6a;
   --color-down: #b42318;
@@ -34,8 +34,12 @@ body {
   @apply bg-page text-ink font-sans antialiased;
 }
 
+/* Figma "Clip path group" artwork: teal radial gradient + geometric line network. */
 .sidebar-bg {
-  background:
-    radial-gradient(120% 60% at 0% 100%, rgb(74 158 153 / 0.35), transparent 60%),
-    linear-gradient(180deg, var(--color-brand-900) 0%, var(--color-brand-800) 55%, #2a6764 100%);
+  background: url('./assets/figma/sidebar-pattern.svg') top left / cover no-repeat,
+    linear-gradient(180deg, #0a5d5c 0%, #282829 100%);
+}
+
+.card-header-bg {
+  background: url('./assets/figma/card-header.svg') center / cover no-repeat, #0a5d5c;
 }

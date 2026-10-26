@@ -1,3 +1,4 @@
+import kloudspotLogo from '../assets/figma/kloudspot-logo.svg'
 import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & { size?: number }
@@ -101,21 +102,7 @@ export const TrendDownIcon = (p: IconProps) => (
   </Icon>
 )
 
+/** Official Kloudspot wordmark, exported from the Figma file (white fill). */
 export function KloudspotLogo({ className = '' }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center gap-1.5 font-semibold tracking-tight ${className}`}>
-      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-        <circle cx="13" cy="13" r="12" fill="currentColor" />
-        <path
-          d="M8 18V9.5a5 5 0 0 1 10 0c0 2.8-2.2 5-5 5"
-          stroke="var(--color-brand-800)"
-          strokeWidth="2.4"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <circle cx="13" cy="9.5" r="1.6" fill="var(--color-brand-800)" />
-      </svg>
-      <span className="text-[1.15rem]">kloudspot</span>
-    </span>
-  )
+  return <img src={kloudspotLogo} alt="Kloudspot" width={127} height={40} className={`h-10 w-auto ${className}`} />
 }
