@@ -30,6 +30,18 @@ A site picker in the top bar re-scopes everything. A day picker lets you look ba
 - **Staging is slow under load.** Analytics calls measured 9–27s on 26 Oct 2026. To cope, requests time out at 45s, retry once, and each panel shows a "taking longer than usual" hint after 4s. One slow or failing endpoint doesn't blank the page: every card has its own loading, error/retry and empty state.
 - **The simulator is not controlled from the UI.** `/api/sim/start` returns 403 for the test account, and the simulator already runs on staging.
 
+## English / Arabic
+
+The En/ع toggle from the design switches the whole UI between English and Arabic. It's in the top bar, plus a glass version on the login screen so a logged-out user can switch back.
+
+- **Translations:** every string is translated (`src/i18n/messages.ts`).
+- **Right-to-left:** in Arabic the layout mirrors through logical CSS properties. The sidebar moves right, the alerts drawer opens from the left, and pagination arrows flip.
+- **Charts:** time axes stay left to right, as is conventional.
+- **Dates and digits:** dates use Arabic month and day names with Western digits (`ar-AE-u-nu-latn`, as is usual in the UAE).
+- **Font:** IBM Plex Sans Arabic, the companion to the design's font.
+- **Mixed text:** Latin names inside Arabic text are direction-isolated, so "Sr." keeps its full stop in place.
+- **Persistence:** the choice is remembered. Switching re-renders in place without reconnecting the socket or refetching data.
+
 ## Design fidelity, responsiveness and motion
 
 - **Figma values.** Sizes, weights, radii and colours were read from the Figma inspector, not eyeballed. Examples: 8px cards, 16px alert cards on a 320px drawer with a rounded top-left corner, `#0A5D5C` brand teal, and the 24/16/14px type scale.
@@ -83,7 +95,6 @@ npm run dev
 
 ## Not done
 
-- **Arabic / RTL.** The En/ع toggle from the design is present, but Arabic is disabled.
 - **Dark mode and end-to-end browser tests.**
 - **Zone-level drill-down.** `zoneOccupancy` arrives on the socket but isn't shown yet.
 - **Page size.** The Crowd Entries page uses a fixed 10 per page, matching the design.
@@ -91,4 +102,4 @@ npm run dev
 ## Credits
 
 - Kloudspot logo, sidebar and login-card line patterns, the bell (Solar Linear), location pin and trend glyphs (Hugeicons) are exported unchanged from Kloudspot's Figma file. Typography follows the Figma inspector values (IBM Plex Sans 300–600, self-hosted).
-- Login background photo: [Pexels #20988575](https://www.pexels.com/photo/monitors-on-desks-in-office-20988575/) (Pexels License). It's converted to greyscale WebP to match the Figma treatment. The original Figma photo is an image fill that view-only accounts can't export.
+- Login background: the original Figma image fill, fetched through the Figma REST API (`scripts/fetch-figma-login-bg.sh`) because view-only accounts can't export it from the editor. Shown under the design's 40% black overlay.

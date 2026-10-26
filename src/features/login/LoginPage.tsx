@@ -1,7 +1,8 @@
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useSession } from '../../auth/session'
 import { EyeIcon, EyeOffIcon, KloudspotLogo } from '../../components/icons'
-import { errorMessage } from '../../components/ui'
+import { LanguageToggle } from '../../components/LanguageToggle'
+import { useI18n } from '../../i18n/i18n'
 import { OfficeBackdrop } from './OfficeBackdrop'
 
 // Figma: outlined 43px field, #E3E3E3 border, label notched into the top border.
@@ -11,7 +12,7 @@ const inputClass =
   'outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-page'
 
 const notchedLabelClass =
-  'absolute -top-2 left-2.5 bg-white px-1 text-xs leading-4 font-medium tracking-[-0.44px] text-[#0d0d0d]/60 transition-colors peer-focus:text-brand-600'
+  'absolute -top-2 start-2.5 bg-white px-1 text-xs leading-4 font-medium tracking-[-0.44px] text-[#0d0d0d]/60 transition-colors peer-focus:text-brand-600'
 
 /**
  * Login screen (SPEC stories 1–5, 10). Redirect after success is owned by `LoginRoute`;
@@ -20,6 +21,7 @@ const notchedLabelClass =
  */
 export function LoginPage() {
   const { login } = useSession()
+  const { t, errorText } = useI18n()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -45,11 +47,7 @@ export function LoginPage() {
     if (inFlight.current) return
     if (!email.trim() || !password) {
       setError(
-        !email.trim() && !password
-          ? 'Enter your login and password.'
-          : !email.trim()
-            ? 'Enter your login.'
-            : 'Enter your password.',
+        !email.trim() && !password ? t('login.errBoth') : !email.trim() ? t('login.errLogin') : t('login.errPassword'),
       )
       return
     }
@@ -59,7 +57,7 @@ export function LoginPage() {
     try {
       await login(email.trim(), password)
     } catch (err) {
-      setError(errorMessage(err))
+      setError(errorText(err))
       setShake(true)
     } finally {
       inFlight.current = false
@@ -70,16 +68,19 @@ export function LoginPage() {
   return (
     <main className="relative isolate flex min-h-full items-center overflow-hidden bg-[#2b2b2b]">
       <OfficeBackdrop />
+      <div className="absolute end-4 top-4 sm:end-6 sm:top-6">
+        <LanguageToggle variant="glass" />
+      </div>
 
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-center gap-12 px-4 py-10 min-[900px]:justify-between min-[900px]:px-12 xl:px-20">
         <h1 className="animate-fade-up hidden text-[32px] leading-10 font-semibold tracking-[0.02em] text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.35)] [animation-delay:120ms] min-[900px]:block">
-          Welcome to the
+          {t('login.welcome1')}
           <br />
-          Crowd Management System
+          {t('login.welcome2')}
         </h1>
 
         <section
-          aria-label="Sign in"
+          aria-label={t('login.signIn')}
           onAnimationEnd={(e) => e.animationName === 'shake' && setShake(false)}
           className={`w-full max-w-[360px] shrink-0 overflow-hidden rounded-lg bg-white shadow-2xl shadow-black/40 ${
             shake ? 'animate-shake' : 'animate-card-in'
@@ -106,7 +107,7 @@ export function LoginPage() {
                 className={inputClass}
               />
               <label htmlFor={emailId} className={notchedLabelClass}>
-                Log In *
+                {t('login.login')}
               </label>
             </div>
 
@@ -122,10 +123,10 @@ export function LoginPage() {
                 aria-invalid={error ? true : undefined}
                 aria-describedby={error ? errorId : undefined}
                 required
-                className={`${inputClass} pr-11`}
+                className={`${inputClass} pe-11`}
               />
               <label htmlFor={passwordId} className={notchedLabelClass}>
-                Password *
+                {t('login.password')}
               </label>
               {/*
                 Name comes from visually hidden text, not aria-label, so `getByLabelText(/password/i)`
@@ -135,10 +136,10 @@ export function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-pressed={showPassword}
-                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r text-ink hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500"
+                className="absolute inset-y-0 end-0 flex w-11 items-center justify-center rounded-e text-ink hover:text-brand-600 focus-visible:outline-2 focus-visible:outline-brand-500"
               >
                 {showPassword ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
-                <span className="sr-only">{showPassword ? 'Hide password' : 'Show password'}</span>
+                <span className="sr-only">{showPassword ? t('login.hidePassword') : t('login.showPassword')}</span>
               </button>
             </div>
 
@@ -151,7 +152,7 @@ export function LoginPage() {
               {pending && (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
               )}
-              {pending ? 'Signing in…' : 'Login'}
+              {pending ? t('login.submitting') : t('login.submit')}
             </button>
 
             <p id={errorId} role="alert" className="mt-3 text-center text-sm text-down empty:mt-0">

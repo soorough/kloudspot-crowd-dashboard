@@ -101,8 +101,9 @@ export const TrendUpIcon = ({ size = 18, ...p }: IconProps) => (
   </svg>
 )
 /** The same Figma glyph mirrored vertically, as used for "less than yesterday". */
-export const TrendDownIcon = ({ size = 18, style, ...p }: IconProps) => (
-  <TrendUpIcon size={size} style={{ transform: 'scaleY(-1)', ...style }} {...p} />
+// Uses the CSS `scale` property (Tailwind v4), so it composes with transform-based animations.
+export const TrendDownIcon = ({ size = 18, className = '', ...p }: IconProps) => (
+  <TrendUpIcon size={size} className={`-scale-y-100 ${className}`} {...p} />
 )
 
 /** Official Kloudspot wordmark, exported from the Figma file (white fill). */

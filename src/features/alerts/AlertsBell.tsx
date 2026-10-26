@@ -1,6 +1,7 @@
 import { useCallback, useReducer, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { BellIcon } from '../../components/icons'
+import { useI18n } from '../../i18n/i18n'
 import type { AlertEvent } from '../../lib/types'
 import { useLiveEvent } from '../../live/live'
 import { useDashboard } from '../../sites/dashboard'
@@ -35,7 +36,8 @@ function AlertsCenter({ siteId, timeZone }: { siteId: string | null; timeZone: s
   const dismissToast = useCallback((eventId: string) => dispatch({ type: 'dismissToast', eventId }), [])
 
   const { unread } = state
-  const label = unread > 0 ? `Alerts, ${unread} unread` : 'Alerts'
+  const { t } = useI18n()
+  const label = unread > 0 ? t('alerts.unread', { n: unread }) : t('alerts.title')
 
   return (
     <>
@@ -57,7 +59,7 @@ function AlertsCenter({ siteId, timeZone }: { siteId: string | null; timeZone: s
           <span
             key={`badge-${unread}`}
             aria-hidden="true"
-            className="animate-pop absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sev-high px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-white"
+            className="animate-pop absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sev-high px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-white"
           >
             {unread > 9 ? '9+' : unread}
           </span>

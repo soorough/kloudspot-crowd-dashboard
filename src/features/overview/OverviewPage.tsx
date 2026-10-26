@@ -3,9 +3,10 @@ import type { ReactNode } from 'react'
 import { PageHeader } from '../../components/PageHeader'
 import { AnimatedValue } from '../../components/AnimatedValue'
 import { TrendDownIcon, TrendUpIcon } from '../../components/icons'
-import { Card, EmptyState, ErrorState, Skeleton, SlowHint, errorMessage } from '../../components/ui'
+import { Card, EmptyState, ErrorState, Skeleton, SlowHint } from '../../components/ui'
 import { formatDwellLong, formatHour, percentChange, type DayWindows } from '../../lib/time'
 import type { Site } from '../../lib/types'
+import { useI18n } from '../../i18n/i18n'
 import { useDashboard } from '../../sites/dashboard'
 import { COLORS, DemographicsChart, DemographicsDonut, LegendDot, OccupancyChart } from './charts'
 import { demographicShare, mean, visibleAxis, withLivePoint } from './metrics'
@@ -13,9 +14,10 @@ import { useFootfallIncrement, useLiveOccupancy, useOverviewQueries } from './us
 
 export function OverviewPage() {
   const { site, windows } = useDashboard()
+  const { t } = useI18n()
   return (
     <div>
-      <PageHeader title="Overview" />
+      <PageHeader title={t('overview.title')} />
       {site && windows ? (
         <OverviewContent key={site.siteId} site={site} windows={windows} />
       ) : (
@@ -32,7 +34,8 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
   const q = useOverviewQueries(site, windows)
   const live = useLiveOccupancy(site.siteId, isToday)
   const footfallExtra = useFootfallIncrement(site.siteId, isToday, q.footfall.data)
-  const comparedTo = isToday ? 'yesterday' : 'the day before'
+  const { t } = useI18n()
+  const comparedTo = isToday ? t('overview.yesterday') : t('overview.dayBefore')
 
   // Occupancy: live value (today) or the day's mean (past day), compared like-for-like.
   const buckets = q.occupancy.data?.buckets ?? []
@@ -70,34 +73,34 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
     <div className="flex flex-col gap-6">
       <section aria-labelledby="overview-occupancy" className="flex flex-col gap-3">
         <h2 id="overview-occupancy" className="text-lg font-medium text-ink">
-          Occupancy
+          {t('overview.occupancy')}
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card className="animate-card-in md:col-span-2">
-            <div className="grid grid-cols-1 gap-4 divide-line max-sm:divide-y sm:grid-cols-2 sm:gap-0 sm:divide-x">
+            <div className="grid grid-cols-1 gap-4 divide-line max-sm:divide-y sm:grid-cols-2 sm:gap-0 sm:divide-x rtl:sm:divide-x-reverse">
               <Stat
-                label={isToday ? 'Live Occupancy' : 'Avg Occupancy'}
+                label={isToday ? t('overview.liveOccupancy') : t('overview.avgOccupancy')}
                 query={live ? null : q.occupancy}
                 value={occupancyValue === null ? null : fmt(occupancyValue)}
                 change={occupancyValue === null || occupancyBaseline === null ? null : percentChange(occupancyValue, occupancyBaseline)}
                 comparedTo={comparedTo}
-                className="max-sm:pb-4 sm:pr-6"
+                className="max-sm:pb-4 sm:pe-6"
               />
               <Stat
-                label={isToday ? "Today's Footfall" : 'Footfall'}
+                label={isToday ? t('overview.todaysFootfall') : t('overview.footfall')}
                 query={q.footfall}
                 value={footfall === null ? null : fmt(footfall)}
                 change={
                   footfall === null || !q.footfallPrev.data ? null : percentChange(footfall, q.footfallPrev.data.footfall)
                 }
                 comparedTo={comparedTo}
-                className="max-sm:pt-4 sm:pl-6"
+                className="max-sm:pt-4 sm:ps-6"
               />
             </div>
           </Card>
           <Card className="animate-card-in [animation-delay:60ms]">
             <Stat
-              label="Avg Dwell Time"
+              label={t('overview.avgDwell')}
               query={q.dwell}
               value={dwell === null ? null : formatDwellLong(dwell)}
               change={dwell === null || !q.dwellPrev.data ? null : percentChange(dwell, q.dwellPrev.data.avgDwellMinutes)}
@@ -106,8 +109,8 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
           </Card>
         </div>
 
-        <Card className="animate-card-in [animation-delay:120ms]" title="Overall Occupancy" actions={<LegendDot color={COLORS.occupancy}>Occupancy</LegendDot>}>
-          <QueryBody query={q.occupancy} skeletonClass="h-72" isEmpty={buckets.length === 0} empty="No occupancy data for this day.">
+        <Card className="animate-card-in [animation-delay:120ms]" title={t('overview.overallOccupancy')} actions={<LegendDot color={COLORS.occupancy}>{t('overview.occupancy')}</LegendDot>}>
+          <QueryBody query={q.occupancy} skeletonClass="h-72" isEmpty={buckets.length === 0} empty={t('overview.noOccupancy')}>
             <OccupancyChart
               data={occupancySeries}
               axis={chartAxis}
@@ -121,29 +124,33 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
 
       <section aria-labelledby="overview-demographics" className="flex flex-col gap-3">
         <h2 id="overview-demographics" className="text-lg font-medium text-ink">
-          Demographics
+          {t('overview.demographics')}
         </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Card className="animate-card-in [animation-delay:180ms]" title="Chart of Demographics">
-            <QueryBody query={q.demographics} skeletonClass="h-64" isEmpty={!share} empty="No demographic data for this day.">
+          <Card className="animate-card-in [animation-delay:180ms]" title={t('overview.chartOfDemographics')}>
+            <QueryBody query={q.demographics} skeletonClass="h-64" isEmpty={!share} empty={t('overview.noDemographics')}>
               {share && (
                 <div className="flex flex-col items-center gap-4">
-                  <DemographicsDonut male={share.male} female={share.female} />
-                  <ul className="flex flex-col gap-2 self-stretch px-2 text-sm text-ink" aria-label="Demographic share">
-                    <ShareRow color={COLORS.male} pct={share.male} label="Males" />
-                    <ShareRow color={COLORS.female} pct={share.female} label="Females" />
+                  <DemographicsDonut
+                    male={share.male}
+                    female={share.female}
+                    label={`${t('overview.share')}: ${share.male}% ${t('overview.males')}, ${share.female}% ${t('overview.females')}`}
+                  />
+                  <ul className="flex flex-col gap-2 self-stretch px-2 text-sm text-ink" aria-label={t('overview.share')}>
+                    <ShareRow color={COLORS.male} pct={share.male} label={t('overview.males')} />
+                    <ShareRow color={COLORS.female} pct={share.female} label={t('overview.females')} />
                   </ul>
                 </div>
               )}
             </QueryBody>
           </Card>
           <Card
-            title="Demographics Analysis"
+            title={t('overview.demographicsAnalysis')}
             className="animate-card-in [animation-delay:240ms] md:col-span-2"
             actions={
               <div className="flex items-center gap-3">
-                <LegendDot color={COLORS.male}>Male</LegendDot>
-                <LegendDot color={COLORS.female}>Female</LegendDot>
+                <LegendDot color={COLORS.male}>{t('overview.male')}</LegendDot>
+                <LegendDot color={COLORS.female}>{t('overview.female')}</LegendDot>
               </div>
             }
           >
@@ -151,7 +158,7 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
               query={q.demographics}
               skeletonClass="h-72"
               isEmpty={demoBuckets.length === 0}
-              empty="No demographic data for this day."
+              empty={t('overview.noDemographics')}
             >
               <DemographicsChart
                 data={demoBuckets}
@@ -195,19 +202,20 @@ function Stat({
   comparedTo: string
   className?: string
 }) {
+  const { t, errorText } = useI18n()
   let body: ReactNode
   if (query?.isPending) {
     body = (
-      <div className="flex flex-col gap-2" aria-label={`Loading ${label}`}>
+      <div className="flex flex-col gap-2" aria-busy="true">
         <Skeleton className="h-8 w-28" />
         <Skeleton className="h-4 w-40" />
         <SlowHint />
       </div>
     )
   } else if (query?.isError) {
-    body = <ErrorState message={`Couldn't load ${label.toLowerCase()}. ${errorMessage(query.error)}`} onRetry={() => void query.refetch()} />
+    body = <ErrorState message={`${t('overview.loadFailed', { what: label })} ${errorText(query.error)}`} onRetry={() => void query.refetch()} />
   } else if (value === null) {
-    body = <p className="text-sm text-ink-muted">No data for this day.</p>
+    body = <p className="text-sm text-ink-muted">{t('overview.noData')}</p>
   } else {
     body = (
       <>
@@ -227,8 +235,10 @@ function Stat({
 }
 
 function Trend({ change, comparedTo }: { change: number | null; comparedTo: string }) {
+  const { t } = useI18n()
   if (change === null) return null
-  if (change === 0) return <p className="text-sm leading-[14px] font-light text-ink-strong">Same as {comparedTo}</p>
+  if (change === 0)
+    return <p className="text-sm leading-[14px] font-light text-ink-strong">{t('overview.same', { when: comparedTo })}</p>
   const up = change > 0
   const Icon = up ? TrendUpIcon : TrendDownIcon
   // Figma: trend glyph on its own line, then 14px light copy.
@@ -236,7 +246,7 @@ function Trend({ change, comparedTo }: { change: number | null; comparedTo: stri
     <div className="flex flex-col gap-1.5">
       <Icon size={18} className={`animate-pop ${up ? 'text-up' : 'text-down'}`} />
       <p className="text-sm leading-[14px] font-light tracking-[0.1px] text-ink-strong">
-        {Math.abs(change)}% {up ? 'More' : 'Less'} than {comparedTo}
+        {t(up ? 'overview.more' : 'overview.less', { n: Math.abs(change), when: comparedTo })}
       </p>
     </div>
   )
@@ -255,6 +265,7 @@ function QueryBody({
   empty: string
   children: ReactNode
 }) {
+  const { t, errorText } = useI18n()
   if (query.isPending)
     return (
       <div className="relative">
@@ -265,7 +276,7 @@ function QueryBody({
       </div>
     )
   if (query.isError)
-    return <ErrorState message={`Couldn't load this chart. ${errorMessage(query.error)}`} onRetry={() => void query.refetch()} />
+    return <ErrorState message={`${t('overview.chartFailed')} ${errorText(query.error)}`} onRetry={() => void query.refetch()} />
   if (isEmpty) return <EmptyState>{empty}</EmptyState>
   return <>{children}</>
 }

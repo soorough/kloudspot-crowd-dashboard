@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { lazy, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { SessionProvider, useSession } from '../auth/session'
+import { I18nProvider } from '../i18n/i18n'
 import { API_BASE_URL } from '../config'
 import { LoginPage } from '../features/login/LoginPage'
 import { LiveProvider, createSocketIo, type SocketFactory } from '../live/live'
@@ -36,6 +37,7 @@ export function App({ baseUrl = API_BASE_URL, socketFactory = createSocketIo, cl
   const [client] = useState(() => queryClient ?? createQueryClient())
   return (
     <QueryClientProvider client={client}>
+      <I18nProvider>
       <SessionProvider baseUrl={baseUrl} clock={clock}>
         <AuthedProviders baseUrl={baseUrl} socketFactory={socketFactory} clock={clock}>
           <Routes>
@@ -54,6 +56,7 @@ export function App({ baseUrl = API_BASE_URL, socketFactory = createSocketIo, cl
           </Routes>
         </AuthedProviders>
       </SessionProvider>
+      </I18nProvider>
     </QueryClientProvider>
   )
 }

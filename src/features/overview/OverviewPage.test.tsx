@@ -62,7 +62,7 @@ describe('Overview page', () => {
     const legend = await screen.findByRole('list', { name: 'Demographic share' })
     expect(legend).toHaveTextContent('55% Males')
     expect(legend).toHaveTextContent('45% Females')
-    expect(screen.getByRole('img', { name: /^Demographic share of the crowd: 55% male, 45% female/ })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /^Demographic share: 55% Males, 45% Females/ })).toBeInTheDocument()
   })
 
   it('keeps the other cards when footfall fails, and retries', async () => {

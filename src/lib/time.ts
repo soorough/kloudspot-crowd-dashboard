@@ -100,14 +100,29 @@ export function percentChange(current: number, previous: number): number | null 
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
-/** Card format from the design: `08min 30sec`. */
+// Display locale for user-facing dates. Arabic keeps Western digits, as is usual in the UAE.
+const LOCALES = { en: 'en-US', ar: 'ar-AE-u-nu-latn' } as const
+let displayLang: keyof typeof LOCALES = 'en'
+
+/** Called by the i18n provider; formatting below follows the active UI language. */
+export function setDisplayLocale(lang: string) {
+  displayLang = lang === 'ar' ? 'ar' : 'en'
+}
+
+const DWELL_UNITS = {
+  en: { h: 'h', min: 'min', sec: 'sec', sep: '' },
+  ar: { h: ' س', min: ' د', sec: ' ث', sep: '' },
+}
+
+/** Card format from the design: `08min 30sec` (Arabic: `08 د 30 ث`). */
 export function formatDwellLong(minutes: number | null | undefined): string {
   if (minutes == null || !Number.isFinite(minutes)) return '--'
+  const u = DWELL_UNITS[displayLang]
   const totalSec = Math.round(minutes * 60)
   const h = Math.floor(totalSec / 3600)
   const m = Math.floor((totalSec % 3600) / 60)
   const s = totalSec % 60
-  return h > 0 ? `${h}h ${pad2(m)}min` : `${pad2(m)}min ${pad2(s)}sec`
+  return h > 0 ? `${h}${u.h} ${pad2(m)}${u.min}` : `${pad2(m)}${u.min} ${pad2(s)}${u.sec}`
 }
 
 /** Table format from the design: `HH:MM`. */
@@ -119,10 +134,11 @@ export function formatDwellShort(minutes: number | null | undefined): string {
 
 const fmtCache = new Map<string, Intl.DateTimeFormat>()
 function fmt(timeZone: string, key: string, opts: Intl.DateTimeFormatOptions) {
-  const k = `${timeZone}|${key}`
+  const locale = LOCALES[displayLang]
+  const k = `${locale}|${timeZone}|${key}`
   let f = fmtCache.get(k)
   if (!f) {
-    f = new Intl.DateTimeFormat('en-US', { timeZone, ...opts })
+    f = new Intl.DateTimeFormat(locale, { timeZone, ...opts })
     fmtCache.set(k, f)
   }
   return f
@@ -154,7 +170,7 @@ export function formatTime24(utc: number, timeZone: string): string {
 /** `Mon, 26 Oct` — day picker label. */
 export function formatDayLabel(day: LocalDay): string {
   const { y, m, d } = parseDay(day)
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(displayLang === 'ar' ? LOCALES.ar : 'en-GB', {
     timeZone: 'UTC',
     weekday: 'short',
     day: '2-digit',

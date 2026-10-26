@@ -2,7 +2,9 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useApi } from '../../auth/session'
 import { PageHeader } from '../../components/PageHeader'
-import { EmptyState, ErrorState, Skeleton, SlowHint, errorMessage } from '../../components/ui'
+import { EmptyState, ErrorState, Skeleton, SlowHint } from '../../components/ui'
+import { useI18n, type Translate } from '../../i18n/i18n'
+import type { MessageKey } from '../../i18n/messages'
 import { formatClock, formatDwellShort } from '../../lib/time'
 import type { EntryRecord } from '../../lib/types'
 import { useDashboard } from '../../sites/dashboard'
@@ -12,11 +14,12 @@ import { Pagination } from './Pagination'
 /** Fixed to match the Figma curl; there is no page-size picker in the design. */
 export const PAGE_SIZE = 10
 
-const COLUMNS = ['Name', 'Sex', 'Entry', 'Exit', 'Dwell Time']
+const COLUMNS: MessageKey[] = ['entries.name', 'entries.sex', 'entries.entry', 'entries.exit', 'entries.dwell']
 
 export function EntriesPage() {
   const api = useApi()
   const { site, windows } = useDashboard()
+  const { t, errorText } = useI18n()
 
   // Page is scoped to site + day: a new scope starts at page 1 without an effect-driven reset.
   const scope = `${site?.siteId}|${windows?.day}`
@@ -46,7 +49,7 @@ export function EntriesPage() {
     }
   }, [query.isPlaceholderData, totalPages, page, scope])
 
-  if (!site || !windows) return <PageHeader title="Crowd Entries" />
+  if (!site || !windows) return <PageHeader title={t('entries.title')} />
 
   const data = query.data
   const stale = query.isPlaceholderData
@@ -54,22 +57,26 @@ export function EntriesPage() {
 
   let body
   if (query.isError && !data) {
-    body = <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} />
+    body = <ErrorState message={errorText(query.error)} onRetry={() => void query.refetch()} />
   } else if (!data) {
-    body = <EntriesTable rows={null} timeZone={timeZone} />
+    body = <EntriesTable rows={null} timeZone={timeZone} t={t} />
   } else if (data.records.length === 0 && data.totalRecords === 0) {
-    body = <EmptyState>No visits recorded for this day.</EmptyState>
+    body = <EmptyState>{t('entries.empty')}</EmptyState>
   } else {
     const first = (data.pageNumber - 1) * data.pageSize + 1
     const last = first + data.records.length - 1
     body = (
       <>
         <div className={`transition-opacity ${stale ? 'opacity-60' : ''}`} aria-busy={stale || undefined}>
-          <EntriesTable rows={data.records} timeZone={timeZone} />
+          <EntriesTable rows={data.records} timeZone={timeZone} t={t} />
         </div>
         <div className="mt-4 flex flex-col-reverse items-center gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr]">
           <p className="text-sm text-ink-muted tabular-nums sm:justify-self-start">
-            Showing {first.toLocaleString('en-US')}–{last.toLocaleString('en-US')} of {data.totalRecords.toLocaleString('en-US')}
+            {t('entries.showing', {
+              a: first.toLocaleString('en-US'),
+              b: last.toLocaleString('en-US'),
+              n: data.totalRecords.toLocaleString('en-US'),
+            })}
           </p>
           <Pagination page={page} totalPages={data.totalPages} onChange={setPage} />
         </div>
@@ -79,24 +86,24 @@ export function EntriesPage() {
 
   return (
     <>
-      <PageHeader title="Crowd Entries" />
-      <section className="rounded-lg border border-line bg-white p-4" aria-label="Visits">
+      <PageHeader title={t('entries.title')} />
+      <section className="rounded-lg border border-line bg-white p-4" aria-label={t('entries.visits')}>
         {body}
       </section>
     </>
   )
 }
 
-function EntriesTable({ rows, timeZone }: { rows: EntryRecord[] | null; timeZone: string }) {
+function EntriesTable({ rows, timeZone, t }: { rows: EntryRecord[] | null; timeZone: string; t: Translate }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] border-collapse text-left text-sm">
-        <caption className="sr-only">Visits for the selected day</caption>
+      <table className="w-full min-w-[560px] border-collapse text-start text-sm">
+        <caption className="sr-only">{t('entries.caption')}</caption>
         <thead>
           <tr className="bg-page">
             {COLUMNS.map((c) => (
-              <th key={c} scope="col" className="h-10 px-4 text-[0.8125rem] font-medium whitespace-nowrap text-ink">
-                {c}
+              <th key={c} scope="col" className="h-10 px-4 text-start text-[0.8125rem] font-medium whitespace-nowrap text-ink">
+                {t(c)}
               </th>
             ))}
           </tr>
@@ -112,7 +119,7 @@ function EntriesTable({ rows, timeZone }: { rows: EntryRecord[] | null; timeZone
                   ))}
                 </tr>
               ))
-            : rows.map((r) => <EntryRow key={`${r.personId}-${r.entryUtc}`} record={r} timeZone={timeZone} />)}
+            : rows.map((r) => <EntryRow key={`${r.personId}-${r.entryUtc}`} record={r} timeZone={timeZone} t={t} />)}
         </tbody>
       </table>
       {rows === null && <SlowHint className="mx-4 my-3" />}
@@ -120,16 +127,17 @@ function EntriesTable({ rows, timeZone }: { rows: EntryRecord[] | null; timeZone
   )
 }
 
-function EntryRow({ record: r, timeZone }: { record: EntryRecord; timeZone: string }) {
+function EntryRow({ record: r, timeZone, t }: { record: EntryRecord; timeZone: string; t: Translate }) {
   const inside = r.exitUtc == null
-  const sex = r.gender ? r.gender.charAt(0).toUpperCase() + r.gender.slice(1).toLowerCase() : '--'
+  const g = r.gender?.toLowerCase()
+  const sex = g === 'male' ? t('entries.male') : g === 'female' ? t('entries.female') : r.gender || '--'
   return (
     <tr className="h-11 border-b border-line text-ink-muted last:border-b-0">
       <td className="px-4 whitespace-nowrap">
         <span className="flex items-center gap-2.5">
           <Avatar name={r.personName} />
-          <span className="text-ink">{r.personName}</span>
-          {inside && <span className="sr-only">(still inside)</span>}
+          <bdi className="text-ink">{r.personName}</bdi>
+          {inside && <span className="sr-only">{t('entries.stillInside')}</span>}
         </span>
       </td>
       <td className="px-4">{sex}</td>

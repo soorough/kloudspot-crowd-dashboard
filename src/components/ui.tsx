@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { useI18n } from '../i18n/i18n'
+import type { MessageKey } from '../i18n/messages'
 
 /** White surface used by every dashboard panel. */
 export function Card({ title, actions, className = '', children }: {
@@ -25,6 +27,7 @@ export function Skeleton({ className = '' }: { className?: string }) {
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useI18n()
   return (
     <div role="alert" className="flex flex-col items-start gap-2 text-sm text-ink-muted">
       <p>{message}</p>
@@ -34,7 +37,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
           onClick={onRetry}
           className="rounded-md border border-line px-3 py-1 text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-brand-500"
         >
-          Retry
+          {t('common.retry')}
         </button>
       )}
     </div>
@@ -49,10 +52,10 @@ export function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : 'Something went wrong.'
 }
 
-const SLOW_MESSAGES = [
-  { after: 4000, text: 'Crunching the numbers…' },
-  { after: 12000, text: 'The server is busy, still working on it' },
-  { after: 25000, text: 'Almost there, thanks for your patience' },
+const SLOW_MESSAGES: { after: number; key: MessageKey }[] = [
+  { after: 4000, key: 'slow.1' },
+  { after: 12000, key: 'slow.2' },
+  { after: 25000, key: 'slow.3' },
 ]
 
 /**
@@ -61,6 +64,7 @@ const SLOW_MESSAGES = [
  */
 export function SlowHint({ className = '' }: { className?: string }) {
   const [step, setStep] = useState(-1)
+  const { t } = useI18n()
   useEffect(() => {
     const ids = SLOW_MESSAGES.map((m, i) => setTimeout(() => setStep(i), m.after))
     return () => ids.forEach(clearTimeout)
@@ -69,14 +73,14 @@ export function SlowHint({ className = '' }: { className?: string }) {
   return (
     <p
       role="status"
-      className={`animate-fade-up inline-flex w-fit items-center gap-2 rounded-full bg-brand-50 py-1 pr-3 pl-2 text-xs font-medium text-brand-800 ring-1 ring-brand-100 ${className}`}
+      className={`animate-fade-up inline-flex w-fit items-center gap-2 rounded-full bg-brand-50 py-1 ps-2 pe-3 text-xs font-medium text-brand-800 ring-1 ring-brand-100 ${className}`}
     >
       <span className="relative flex h-2 w-2" aria-hidden="true">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-50" />
         <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
       </span>
       <span key={step} className="animate-fade-up">
-        {SLOW_MESSAGES[step].text}
+        {t(SLOW_MESSAGES[step].key)}
       </span>
     </p>
   )

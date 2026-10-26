@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { useI18n } from '../../i18n/i18n'
 import { formatHour } from '../../lib/time'
 import type { DemographicsBucket, OccupancyBucket, TimeRange } from '../../lib/types'
 import { dayTicks } from './metrics'
@@ -26,7 +27,7 @@ export const COLORS = {
 
 const AXIS_TICK = { fontSize: 11, fill: COLORS.axis }
 
-function timeAxis(axis: TimeRange, timeZone: string) {
+function timeAxis(axis: TimeRange, timeZone: string, label: string) {
   return (
     <XAxis
       type="number"
@@ -39,12 +40,12 @@ function timeAxis(axis: TimeRange, timeZone: string) {
       tickLine={false}
       axisLine={{ stroke: COLORS.grid }}
       allowDataOverflow
-      label={{ value: 'Time', position: 'insideBottom', offset: -4, fontSize: 12, fill: COLORS.axis }}
+      label={{ value: label, position: 'insideBottom', offset: -4, fontSize: 12, fill: COLORS.axis }}
     />
   )
 }
 
-function countAxis() {
+function countAxis(label: string) {
   return (
     <YAxis
       tick={AXIS_TICK}
@@ -54,7 +55,7 @@ function countAxis() {
       allowDecimals={false}
       // ~30% headroom above the peak, rounded to a tidy step, so the line never hugs the top (Figma).
       domain={[0, (max: number) => niceCeil(max * 1.3)]}
-      label={{ value: 'Count', angle: -90, position: 'insideLeft', offset: 8, fontSize: 12, fill: COLORS.axis }}
+      label={{ value: label, angle: -90, position: 'insideLeft', offset: 8, fontSize: 12, fill: COLORS.axis }}
     />
   )
 }
@@ -75,14 +76,14 @@ function tooltip(timeZone: string) {
   )
 }
 
-function LiveTag({ viewBox }: { viewBox?: { x?: number; y?: number } }) {
+function LiveTag({ viewBox, text }: { viewBox?: { x?: number; y?: number }; text: string }) {
   const x = viewBox?.x ?? 0
   const y = viewBox?.y ?? 0
   return (
     <g transform={`translate(${x - 9}, ${y + 2}) rotate(-90)`}>
-      <rect x={-30} y={0} width={30} height={16} rx={3} fill={COLORS.live} />
-      <text x={-15} y={11.5} textAnchor="middle" fontSize={9} fontWeight={600} fill="#fff" letterSpacing={0.5}>
-        LIVE
+      <rect x={-34} y={0} width={34} height={16} rx={3} fill={COLORS.live} />
+      <text x={-17} y={11.5} textAnchor="middle" fontSize={9} fontWeight={600} fill="#fff" letterSpacing={0.5}>
+        {text}
       </text>
     </g>
   )
@@ -102,8 +103,10 @@ export function OccupancyChart({
   liveAt: number | null
   label: string
 }) {
+  const { t } = useI18n()
+  // Time axes read left to right in both languages, so charts opt out of RTL mirroring.
   return (
-    <div role="img" aria-label={label} className="h-72 w-full">
+    <div role="img" aria-label={label} dir="ltr" className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 16, bottom: 12, left: 4 }}>
           <defs>
@@ -113,13 +116,13 @@ export function OccupancyChart({
             </linearGradient>
           </defs>
           <CartesianGrid stroke={COLORS.grid} strokeDasharray="4 4" vertical={false} />
-          {timeAxis(axis, timeZone)}
-          {countAxis()}
+          {timeAxis(axis, timeZone, t('overview.axisTime'))}
+          {countAxis(t('overview.axisCount'))}
           {tooltip(timeZone)}
           <Area
             type="monotone"
             dataKey="avg"
-            name="Occupancy"
+            name={t('overview.occupancy')}
             stroke={COLORS.occupancy}
             strokeWidth={2}
             fill="url(#overview-occupancy-fill)"
@@ -131,7 +134,7 @@ export function OccupancyChart({
               stroke={COLORS.live}
               strokeDasharray="4 4"
               ifOverflow="extendDomain"
-              label={(props: { viewBox?: { x?: number; y?: number } }) => <LiveTag viewBox={props.viewBox} />}
+              label={(props: { viewBox?: { x?: number; y?: number } }) => <LiveTag viewBox={props.viewBox} text={t('overview.liveTag')} />}
             />
           )}
         </AreaChart>
@@ -151,8 +154,9 @@ export function DemographicsChart({
   timeZone: string
   label: string
 }) {
+  const { t } = useI18n()
   return (
-    <div role="img" aria-label={label} className="h-72 w-full">
+    <div role="img" aria-label={label} dir="ltr" className="h-72 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 16, bottom: 12, left: 4 }}>
           <defs>
@@ -166,13 +170,13 @@ export function DemographicsChart({
             </linearGradient>
           </defs>
           <CartesianGrid stroke={COLORS.grid} strokeDasharray="4 4" vertical={false} />
-          {timeAxis(axis, timeZone)}
-          {countAxis()}
+          {timeAxis(axis, timeZone, t('overview.axisTime'))}
+          {countAxis(t('overview.axisCount'))}
           {tooltip(timeZone)}
           <Area
             type="monotone"
             dataKey="male"
-            name="Male"
+            name={t('overview.male')}
             stroke={COLORS.male}
             strokeWidth={2}
             fill="url(#overview-male-fill)"
@@ -181,7 +185,7 @@ export function DemographicsChart({
           <Area
             type="monotone"
             dataKey="female"
-            name="Female"
+            name={t('overview.female')}
             stroke={COLORS.female}
             strokeWidth={2}
             fill="url(#overview-female-fill)"
@@ -193,15 +197,16 @@ export function DemographicsChart({
   )
 }
 
-export function DemographicsDonut({ male, female }: { male: number; female: number }) {
+export function DemographicsDonut({ male, female, label }: { male: number; female: number; label: string }) {
+  const { t } = useI18n()
   const data = [
-    { name: 'Males', value: male, color: COLORS.male },
-    { name: 'Females', value: female, color: COLORS.female },
+    { name: t('overview.males'), value: male, color: COLORS.male },
+    { name: t('overview.females'), value: female, color: COLORS.female },
   ]
   return (
     <div
       role="img"
-      aria-label={`Demographic share of the crowd: ${male}% male, ${female}% female`}
+      aria-label={label}
       className="relative mx-auto h-48 w-48"
     >
       <ResponsiveContainer width="100%" height="100%">
@@ -224,7 +229,7 @@ export function DemographicsDonut({ male, female }: { male: number; female: numb
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center" aria-hidden="true">
-        <span className="text-xs text-ink-muted">Total Crowd</span>
+        <span className="text-xs text-ink-muted">{t('overview.totalCrowd')}</span>
         <span className="text-lg font-medium text-ink">100%</span>
       </div>
     </div>
