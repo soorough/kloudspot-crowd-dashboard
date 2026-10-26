@@ -81,6 +81,18 @@ body {
   @apply bg-page text-ink font-sans antialiased;
 }
 
+/* Moving highlight across large skeletons. */
+.shimmer {
+  background-image: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.55) 50%, transparent 80%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+@keyframes shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
 /* Figma "Clip path group" artwork: teal radial gradient + geometric line network. */
 .sidebar-bg {
   background: url('./assets/figma/sidebar-pattern.svg') top left / cover no-repeat,

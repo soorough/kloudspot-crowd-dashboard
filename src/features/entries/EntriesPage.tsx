@@ -115,7 +115,7 @@ function EntriesTable({ rows, timeZone }: { rows: EntryRecord[] | null; timeZone
             : rows.map((r) => <EntryRow key={`${r.personId}-${r.entryUtc}`} record={r} timeZone={timeZone} />)}
         </tbody>
       </table>
-      {rows === null && <SlowHint className="px-4 py-3" />}
+      {rows === null && <SlowHint className="mx-4 my-3" />}
     </div>
   )
 }

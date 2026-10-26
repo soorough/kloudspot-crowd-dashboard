@@ -257,9 +257,11 @@ function QueryBody({
 }) {
   if (query.isPending)
     return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className={`w-full ${skeletonClass}`} />
-        <SlowHint />
+      <div className="relative">
+        <Skeleton className={`shimmer w-full ${skeletonClass}`} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <SlowHint className="shadow-sm" />
+        </div>
       </div>
     )
   if (query.isError)

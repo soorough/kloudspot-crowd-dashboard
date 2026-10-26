@@ -49,17 +49,35 @@ export function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : 'Something went wrong.'
 }
 
-/** Shown under a skeleton once loading passes `afterMs` — the staging API can take 10–30s under load. */
-export function SlowHint({ afterMs = 4000, className = '' }: { afterMs?: number; className?: string }) {
-  const [show, setShow] = useState(false)
+const SLOW_MESSAGES = [
+  { after: 4000, text: 'Crunching the numbers…' },
+  { after: 12000, text: 'The server is busy, still working on it' },
+  { after: 25000, text: 'Almost there, thanks for your patience' },
+]
+
+/**
+ * Shown under a skeleton once loading drags on (the staging API can take 10–30s).
+ * A small brand pill with a live pulse; the copy softens the longer the wait.
+ */
+export function SlowHint({ className = '' }: { className?: string }) {
+  const [step, setStep] = useState(-1)
   useEffect(() => {
-    const id = setTimeout(() => setShow(true), afterMs)
-    return () => clearTimeout(id)
-  }, [afterMs])
-  if (!show) return null
+    const ids = SLOW_MESSAGES.map((m, i) => setTimeout(() => setStep(i), m.after))
+    return () => ids.forEach(clearTimeout)
+  }, [])
+  if (step < 0) return null
   return (
-    <p className={`text-xs text-ink-muted ${className}`} role="status">
-      Taking longer than usual — the server is busy. Still loading…
+    <p
+      role="status"
+      className={`animate-fade-up inline-flex w-fit items-center gap-2 rounded-full bg-brand-50 py-1 pr-3 pl-2 text-xs font-medium text-brand-800 ring-1 ring-brand-100 ${className}`}
+    >
+      <span className="relative flex h-2 w-2" aria-hidden="true">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-50" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
+      </span>
+      <span key={step} className="animate-fade-up">
+        {SLOW_MESSAGES[step].text}
+      </span>
     </p>
   )
 }
