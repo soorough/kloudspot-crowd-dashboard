@@ -34,16 +34,18 @@
   --animate-wiggle: wiggle 600ms ease-in-out;
   --animate-pop: pop 320ms var(--ease-out-soft);
 
+  /* Entrances never start fully transparent: if animations are throttled (background tab,
+     headless) content must still paint, and 0-opacity frames don't count as first paint. */
   @keyframes fade-up {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0.01; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
   @keyframes card-in {
-    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    from { opacity: 0.01; transform: translateY(14px) scale(0.98); }
     to { opacity: 1; transform: none; }
   }
   @keyframes bg-in {
-    from { opacity: 0; transform: scale(1.04); }
+    from { transform: scale(1.04); }
     to { opacity: 1; transform: none; }
   }
   @keyframes shake {
