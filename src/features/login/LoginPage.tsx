@@ -6,11 +6,12 @@ import { OfficeBackdrop } from './OfficeBackdrop'
 
 // Figma: outlined 43px field, #E3E3E3 border, label notched into the top border.
 const inputClass =
-  'peer block h-[43px] w-full rounded border border-[#e3e3e3] bg-white px-3 text-sm text-black placeholder:text-[#b5b5b5] ' +
+  // 16px on phones stops iOS zooming into the field; Figma's 12px from sm up.
+  'peer block h-[43px] w-full rounded border border-[#e3e3e3] bg-white px-3 text-base font-medium tracking-[-0.44px] text-[#030303] placeholder:font-normal placeholder:text-[#b5b5b5] sm:text-xs ' +
   'outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:bg-page'
 
 const notchedLabelClass =
-  'absolute -top-2 left-2.5 bg-white px-1 text-xs leading-4 text-[#8e8e8e] peer-focus:text-brand-600'
+  'absolute -top-2 left-2.5 bg-white px-1 text-xs leading-4 font-medium tracking-[-0.44px] text-[#0d0d0d]/60 transition-colors peer-focus:text-brand-600'
 
 /**
  * Login screen (SPEC stories 1–5, 10). Redirect after success is owned by `LoginRoute`;
@@ -24,6 +25,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [shake, setShake] = useState(false)
   // A ref as well as state: two quick submits can land before the re-render disables the button.
   const inFlight = useRef(false)
 
@@ -58,6 +60,7 @@ export function LoginPage() {
       await login(email.trim(), password)
     } catch (err) {
       setError(errorMessage(err))
+      setShake(true)
     } finally {
       inFlight.current = false
       setPending(false)
@@ -69,7 +72,7 @@ export function LoginPage() {
       <OfficeBackdrop />
 
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-center gap-12 px-4 py-10 min-[900px]:justify-between min-[900px]:px-12 xl:px-20">
-        <h1 className="hidden text-[2rem] leading-[1.25] font-semibold tracking-[0.01em] text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.35)] min-[900px]:block xl:text-[2.4rem]">
+        <h1 className="animate-fade-up hidden text-[32px] leading-10 font-semibold tracking-[0.02em] text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.35)] [animation-delay:120ms] min-[900px]:block">
           Welcome to the
           <br />
           Crowd Management System
@@ -77,7 +80,10 @@ export function LoginPage() {
 
         <section
           aria-label="Sign in"
-          className="w-full max-w-[360px] shrink-0 overflow-hidden rounded-lg bg-white shadow-2xl shadow-black/40"
+          onAnimationEnd={(e) => e.animationName === 'shake' && setShake(false)}
+          className={`w-full max-w-[360px] shrink-0 overflow-hidden rounded-lg bg-white shadow-2xl shadow-black/40 ${
+            shake ? 'animate-shake' : 'animate-card-in'
+          }`}
         >
           <header className="card-header-bg flex h-[108px] items-center justify-center">
             <KloudspotLogo />
@@ -140,8 +146,11 @@ export function LoginPage() {
               type="submit"
               disabled={pending}
               aria-busy={pending || undefined}
-              className="mt-4 h-[42px] w-full rounded-md bg-brand-500 text-base text-white transition-colors hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-4 flex h-[42px] w-full items-center justify-center gap-2 rounded-md bg-brand-500 text-base tracking-[0.44px] text-white transition-[background-color,transform] hover:bg-brand-600 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
+              {pending && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
+              )}
               {pending ? 'Signing in…' : 'Login'}
             </button>
 

@@ -5,7 +5,8 @@
 
   --color-page: #f7f8fa;
   --color-line: #e7e9ee;
-  --color-ink: #1d2433;
+  --color-ink: #1d1d1b;
+  --color-ink-strong: #030303;
   --color-ink-muted: #5b6474;
 
   --color-brand-50: #eaf5f4;
@@ -16,12 +17,56 @@
   --color-brand-800: #0a5d5c;
   --color-brand-900: #282829;
 
-  --color-up: #3b9b6a;
-  --color-down: #b42318;
+  --color-up: #2dc487;
+  --color-down: #a63024;
 
-  --color-sev-high: #b42318;
+  --color-sev-high: #b42018;
   --color-sev-medium: #f0a020;
   --color-sev-low: #3b9b6a;
+
+  /* Motion — every animation below is disabled under prefers-reduced-motion. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-up: fade-up 420ms var(--ease-out-soft) both;
+  --animate-card-in: card-in 520ms var(--ease-out-soft) both;
+  --animate-bg-in: bg-in 900ms ease-out both;
+  --animate-shake: shake 360ms ease-in-out;
+  --animate-flash: flash 900ms ease-out;
+  --animate-wiggle: wiggle 600ms ease-in-out;
+  --animate-pop: pop 320ms var(--ease-out-soft);
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes bg-in {
+    from { opacity: 0; transform: scale(1.04); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  @keyframes flash {
+    0% { color: var(--color-brand-500); text-shadow: 0 0 12px rgb(65 146 143 / 0.35); }
+    100% { color: inherit; text-shadow: none; }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-14deg); }
+    40% { transform: rotate(12deg); }
+    60% { transform: rotate(-8deg); }
+    80% { transform: rotate(4deg); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.6); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
 }
 
 html,
@@ -42,4 +87,14 @@ body {
 
 .card-header-bg {
   background: url('./assets/figma/card-header.svg') center / cover no-repeat, #0a5d5c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }

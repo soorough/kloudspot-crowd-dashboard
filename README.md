@@ -30,6 +30,21 @@ A site picker in the top bar re-scopes everything. A day picker lets you look ba
 - **Staging is slow under load.** Analytics calls measured 9–27s on 26 Oct 2026. To cope, requests time out at 45s, retry once, and each panel shows a "taking longer than usual" hint after 4s. One slow or failing endpoint doesn't blank the page: every card has its own loading, error/retry and empty state.
 - **The simulator is not controlled from the UI.** `/api/sim/start` returns 403 for the test account, and the simulator already runs on staging.
 
+## Design fidelity, responsiveness and motion
+
+- **Figma values.** Sizes, weights, radii and colours were read from the Figma inspector, not eyeballed. Examples: 8px cards, 16px alert cards on a 320px drawer with a rounded top-left corner, `#0A5D5C` brand teal, and the 24/16/14px type scale.
+- **Responsive layout.**
+  - Phones (under 768px) get an off-canvas menu and a compact top bar.
+  - Tablets (768–1023px) get an icon-only sidebar rail.
+  - Desktops get the full sidebar.
+  - The page never scrolls sideways, and the entries table scrolls inside its card.
+- **Small touches.**
+  - Numbers count up, and live values flash softly when they change.
+  - Cards enter in a stagger, and the LIVE dot pulses.
+  - The bell wiggles and its badge pops on new alerts.
+  - The login card shakes on wrong credentials.
+  - All of it is disabled when the OS asks for reduced motion.
+
 ## Stack
 
 Vite · React 19 · TypeScript (strict) · React Router · TanStack Query · Recharts · socket.io-client · Tailwind CSS v4 · Vitest + Testing Library + MSW.
@@ -75,5 +90,5 @@ npm run dev
 
 ## Credits
 
-- Kloudspot logo and the sidebar / login-card line patterns are exported unchanged from Kloudspot's Figma file (`src/assets/figma/`).
+- Kloudspot logo, sidebar and login-card line patterns, the bell (Solar Linear), location pin and trend glyphs (Hugeicons) are exported unchanged from Kloudspot's Figma file. Typography follows the Figma inspector values (IBM Plex Sans 300–600, self-hosted).
 - Login background photo: [Pexels #20988575](https://www.pexels.com/photo/monitors-on-desks-in-office-20988575/) (Pexels License). It's converted to greyscale WebP to match the Figma treatment. The original Figma photo is an image fill that view-only accounts can't export.

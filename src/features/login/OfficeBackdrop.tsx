@@ -1,19 +1,19 @@
-import officeBg from '../../assets/office-bg.webp'
-
 /**
  * Greyscale open-plan office behind the login card, darkened like the Figma so the
  * heading and card stay legible. Photo: Pexels #20988575 (Pexels License), pre-processed
- * to greyscale WebP at build time — see README credits.
+ * to greyscale WebP in two widths and preloaded from index.html — see README credits.
  */
 export function OfficeBackdrop() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-[#2b2b2b]">
       <img
-        src={officeBg}
+        src="/office-bg-1920.webp"
+        srcSet="/office-bg-960.webp 960w, /office-bg-1920.webp 1920w"
+        sizes="100vw"
         alt=""
         fetchPriority="high"
         decoding="async"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="animate-bg-in absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-black/45" />
     </div>

@@ -49,3 +49,15 @@ export function dayTicks(fromUtc: number, toUtc: number, stepHours = 2): number[
   for (let t = fromUtc; t < toUtc; t += stepHours * HOUR_MS) out.push(t)
   return out
 }
+
+/**
+ * The slice of the day a chart shows. Past days: the whole day. Today: midnight → two hours
+ * past now (at least 8h), so the data fills the width with the LIVE marker near the right edge
+ * like the Figma, instead of squeezing a few hours into the left of a 24h axis.
+ */
+export function visibleAxis(axis: { fromUtc: number; toUtc: number }, isToday: boolean, now: number) {
+  if (!isToday) return axis
+  const nextHour = Math.ceil(now / HOUR_MS) * HOUR_MS
+  const to = Math.min(axis.toUtc, Math.max(nextHour + 2 * HOUR_MS, axis.fromUtc + 8 * HOUR_MS))
+  return { fromUtc: axis.fromUtc, toUtc: to }
+}

@@ -1,7 +1,7 @@
-import { Suspense, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Suspense, useEffect, useState } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useSession } from '../auth/session'
-import { ChevronDownIcon, EntriesIcon, HomeIcon, KloudspotLogo, MenuIcon, PinIcon, PowerIcon } from '../components/icons'
+import { ChevronDownIcon, CloseIcon, EntriesIcon, HomeIcon, KloudspotLogo, MenuIcon, PinIcon, PowerIcon } from '../components/icons'
 import { ErrorState, Skeleton } from '../components/ui'
 import { AlertsBell } from '../features/alerts/AlertsBell'
 import { useLiveStatus } from '../live/live'
@@ -12,26 +12,71 @@ const NAV = [
   { to: '/entries', label: 'Crowd Entries', icon: EntriesIcon, end: false },
 ]
 
+/** Tablets start with the icon-only rail; desktops start expanded. Phones use the drawer. */
+const startCollapsed = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(min-width: 768px) and (max-width: 1023px)').matches
+
 export function Shell() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(startCollapsed)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const { logout } = useSession()
   const { site, sitesStatus, retrySites } = useDashboard()
+  const { pathname } = useLocation()
+
+  // Re-evaluate the rail when the viewport crosses the tablet/desktop boundary.
+  useEffect(() => {
+    const mql = window.matchMedia?.('(min-width: 768px) and (max-width: 1023px)')
+    if (!mql) return
+    const onChange = () => setCollapsed(mql.matches)
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
+  // Phone drawer: close on navigation and on Escape.
+  useEffect(() => setDrawerOpen(false), [pathname])
+  useEffect(() => {
+    if (!drawerOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setDrawerOpen(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [drawerOpen])
+
+  // The drawer always shows labels; the collapse toggle only applies from md up.
+  const rail = collapsed && !drawerOpen
 
   return (
     <div className="flex h-full">
+      {drawerOpen && (
+        <div
+          className="animate-fade-up fixed inset-0 z-30 bg-ink/40 md:hidden"
+          aria-hidden="true"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
       <aside
-        className={`sidebar-bg flex shrink-0 flex-col text-white transition-[width] duration-200 ${collapsed ? 'w-[72px]' : 'w-60'}`}
+        id="app-sidebar"
+        className={`sidebar-bg fixed inset-y-0 left-0 z-40 flex w-60 shrink-0 flex-col text-white transition-[width,translate] duration-300 ease-out md:static md:translate-x-0 ${
+          drawerOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        } ${rail ? 'md:w-[72px]' : 'md:w-60'}`}
       >
-        <div className="flex h-16 items-center justify-between px-4">
-          {!collapsed && <KloudspotLogo className="text-white" />}
+        <div className={`flex h-16 items-center px-4 ${rail ? 'justify-center' : 'justify-between'}`}>
+          {!rail && <KloudspotLogo />}
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-expanded={!collapsed}
-            className="rounded p-1.5 text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+            className="hidden rounded p-1.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white md:block"
           >
             <MenuIcon />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Close menu"
+            className="rounded p-1.5 text-white/80 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white md:hidden"
+          >
+            <CloseIcon />
           </button>
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 pt-2">
@@ -40,48 +85,65 @@ export function Shell() {
               key={to}
               to={to}
               end={end}
-              title={collapsed ? label : undefined}
+              title={rail ? label : undefined}
               className={({ isActive }) =>
-                `relative flex h-11 items-center gap-3 rounded-md px-3 text-[0.95rem] transition-colors focus-visible:outline-2 focus-visible:outline-white ${
+                `group relative flex h-11 items-center gap-3 rounded-md px-3 text-[0.95rem] transition-colors focus-visible:outline-2 focus-visible:outline-white ${
+                  rail ? 'justify-center' : ''
+                } ${
                   isActive
                     ? 'bg-white/20 text-white before:absolute before:inset-y-1.5 before:-left-1 before:w-1 before:rounded before:bg-white'
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`
               }
             >
-              <NavIcon />
-              {!collapsed && <span>{label}</span>}
+              <NavIcon className="shrink-0 transition-transform duration-200 group-hover:scale-110" />
+              {!rail && <span>{label}</span>}
             </NavLink>
           ))}
         </nav>
         <button
           type="button"
           onClick={logout}
-          className="mx-3 mt-auto mb-5 flex h-11 items-center gap-3 rounded-md px-3 text-white/85 hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+          title={rail ? 'Logout' : undefined}
+          className={`mx-3 mt-auto mb-5 flex h-11 items-center gap-3 rounded-md px-3 text-white/85 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-white ${
+            rail ? 'justify-center' : ''
+          }`}
         >
           <PowerIcon size={18} />
-          {!collapsed && <span>Logout</span>}
+          {rail ? <span className="sr-only">Logout</span> : <span>Logout</span>}
         </button>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-4 border-b border-line bg-white px-5">
-          <span className="text-[1.05rem] font-medium whitespace-nowrap">Crowd Solutions</span>
-          <span className="h-7 w-px bg-line" aria-hidden="true" />
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-line bg-white px-3 sm:gap-4 sm:px-5">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+            aria-controls="app-sidebar"
+            aria-expanded={drawerOpen}
+            className="rounded p-1.5 text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-brand-500 md:hidden"
+          >
+            <MenuIcon />
+          </button>
+          <span className="hidden text-[1.05rem] font-medium whitespace-nowrap sm:inline">Crowd Solutions</span>
+          <span className="hidden h-7 w-px bg-line sm:block" aria-hidden="true" />
           <SiteSelect />
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4">
             <LiveBadge />
             <LanguageToggle />
             <AlertsBell />
             <UserAvatar />
           </div>
         </header>
-        <main className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
           {sitesStatus === 'error' ? (
             <ErrorState message="Couldn't load your sites." onRetry={retrySites} />
           ) : site ? (
             <Suspense fallback={<PageFallback />}>
-              <Outlet />
+              <div key={pathname} className="animate-fade-up">
+                <Outlet />
+              </div>
             </Suspense>
           ) : (
             <div className="space-y-4" aria-busy="true">
@@ -108,11 +170,11 @@ function PageFallback() {
 function SiteSelect() {
   const { sites, site, setSiteId } = useDashboard()
   return (
-    <label className="relative flex h-10 items-center gap-2 rounded-md border border-line pr-8 pl-3 text-sm focus-within:outline-2 focus-within:outline-brand-500">
+    <label className="relative flex h-10 min-w-0 items-center gap-2 rounded-md border border-line pr-8 pl-3 text-sm transition-colors hover:border-brand-300 focus-within:outline-2 focus-within:outline-brand-500">
       <PinIcon size={16} className="text-ink" />
       <span className="sr-only">Site</span>
       <select
-        className="cursor-pointer appearance-none bg-transparent pr-1 text-ink outline-none"
+        className="min-w-0 max-w-[52vw] cursor-pointer appearance-none truncate bg-transparent pr-1 text-ink outline-none sm:max-w-none"
         value={site?.siteId ?? ''}
         disabled={!site}
         onChange={(e) => setSiteId(e.target.value)}
@@ -135,8 +197,12 @@ function LiveBadge() {
   const live = status === 'live'
   return (
     <span className="flex items-center gap-1.5 text-xs text-ink-muted" role="status">
-      <span className={`h-2 w-2 rounded-full ${live ? 'animate-pulse bg-up' : 'bg-sev-medium'}`} />
-      {live ? 'Live' : status === 'reconnecting' ? 'Reconnecting…' : 'Connecting…'}
+      <span className="relative flex h-2 w-2">
+        {live && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-up opacity-60" />}
+        <span className={`relative inline-flex h-2 w-2 rounded-full ${live ? 'bg-up' : 'bg-sev-medium'}`} />
+      </span>
+      <span className="hidden md:inline">{live ? 'Live' : status === 'reconnecting' ? 'Reconnecting…' : 'Connecting…'}</span>
+      <span className="sr-only md:hidden">{live ? 'Live' : 'Connecting'}</span>
     </span>
   )
 }
@@ -144,7 +210,7 @@ function LiveBadge() {
 /** Visual stub matching the design; Arabic/RTL is out of scope (see README). */
 function LanguageToggle() {
   return (
-    <div className="flex items-center gap-1 rounded-full border border-line p-1" role="group" aria-label="Language">
+    <div className="hidden items-center gap-1 rounded-full border border-line p-1 sm:flex" role="group" aria-label="Language">
       <button
         type="button"
         aria-pressed="true"

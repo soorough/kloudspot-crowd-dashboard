@@ -74,10 +74,11 @@ export function AlertsDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute inset-y-0 right-0 flex w-[340px] max-w-full flex-col bg-white shadow-[-8px_0_24px_rgb(0_0_0/0.12)]"
+        // Figma "alerts": 320px, 16px top-left radius, 20/12 padding, 12px gap.
+        className="absolute inset-y-0 right-0 flex w-[320px] max-w-full flex-col gap-3 rounded-tl-2xl bg-white px-3 pt-5 pb-0 shadow-[-8px_0_24px_rgb(0_0_0/0.12)]"
       >
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-line px-5">
-          <h2 id={titleId} className="text-lg font-medium">
+        <div className="flex min-h-7 shrink-0 items-center justify-between border-b border-line pb-2">
+          <h2 id={titleId} className="text-lg leading-5 font-medium text-[#1e1e1f]">
             Alerts
           </h2>
           <button
@@ -85,18 +86,18 @@ export function AlertsDrawer({
             type="button"
             aria-label="Close alerts"
             onClick={onClose}
-            className="rounded p-1.5 text-ink-muted hover:bg-page hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-500"
+            className="-mr-1 rounded p-1 text-[#1e1e1f] transition-transform hover:rotate-90 hover:bg-page focus-visible:outline-2 focus-visible:outline-brand-500"
           >
-            <CloseIcon size={18} />
+            <CloseIcon size={20} />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+        <div className="-mx-3 min-h-0 flex-1 overflow-y-auto px-3 pb-5">
           {alerts.length === 0 && (
             <p className="px-2 py-10 text-center text-sm text-ink-muted">
               No alerts yet for this site. New entry and exit events will appear here in real time.
             </p>
           )}
-          <ul aria-live="polite" aria-label="Recent alerts" className="flex flex-col gap-2">
+          <ul aria-live="polite" aria-label="Recent alerts" className="flex flex-col gap-3">
             {alerts.map((a, i) => (
               <AlertCard key={a.eventId} alert={a} newest={i === 0} timeZone={timeZone} />
             ))}
@@ -121,19 +122,22 @@ const AlertCard = memo(function AlertCard({
   return (
     <li
       aria-current={newest ? 'true' : undefined}
-      className={`rounded-md border p-3 ${newest ? 'border-brand-300 bg-brand-50' : 'border-line bg-white'}`}
+      // Figma "alert box": 16px radius, 1px border, 16/12 padding, 8px row gap.
+      className={`flex flex-col gap-2 rounded-2xl border px-3 py-4 text-[#1e1e1f] transition-colors duration-700 ${
+        newest ? 'animate-fade-up border-[#009490] bg-[#cef2f1]' : 'border-[#d2d4d9] bg-white'
+      }`}
     >
-      <p className="flex gap-2 text-xs text-ink-muted">
-        <span>{formatLongDate(alert.ts, timeZone)}</span>
+      <p className="flex gap-2 text-sm leading-[14px] tracking-[0.1px]">
+        <span className="font-light">{formatLongDate(alert.ts, timeZone)}</span>
         <span>{formatTime24(alert.ts, timeZone)}</span>
       </p>
-      <p className="mt-1 text-sm font-semibold">{`${alert.personName} ${verb}`}</p>
-      <div className="mt-1 flex items-end justify-between gap-2">
-        <p className="flex min-w-0 items-center gap-1 text-xs text-ink-muted">
-          <PinIcon size={14} className="shrink-0" />
+      <p className="text-base leading-[18px] font-medium tracking-[0.1px]">{`${alert.personName} ${verb}`}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex min-w-0 items-center gap-1 text-sm leading-3 font-light tracking-[0.1px]">
+          <PinIcon size={16} className="shrink-0" />
           <span className="truncate">{alert.zoneName}</span>
         </p>
-        <span className={`shrink-0 rounded-sm px-2 py-0.5 text-[11px] font-medium text-white ${sev.className}`}>
+        <span className={`shrink-0 rounded px-2 py-1.5 text-xs leading-[10px] font-medium text-white ${sev.className}`}>
           {sev.label}
         </span>
       </div>

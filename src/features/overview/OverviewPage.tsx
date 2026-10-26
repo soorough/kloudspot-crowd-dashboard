@@ -1,13 +1,14 @@
 import type { UseQueryResult } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { PageHeader } from '../../components/PageHeader'
+import { AnimatedValue } from '../../components/AnimatedValue'
 import { TrendDownIcon, TrendUpIcon } from '../../components/icons'
 import { Card, EmptyState, ErrorState, Skeleton, SlowHint, errorMessage } from '../../components/ui'
 import { formatDwellLong, formatHour, percentChange, type DayWindows } from '../../lib/time'
 import type { Site } from '../../lib/types'
 import { useDashboard } from '../../sites/dashboard'
 import { COLORS, DemographicsChart, DemographicsDonut, LegendDot, OccupancyChart } from './charts'
-import { demographicShare, mean, withLivePoint } from './metrics'
+import { demographicShare, mean, visibleAxis, withLivePoint } from './metrics'
 import { useFootfallIncrement, useLiveOccupancy, useOverviewQueries } from './useOverviewData'
 
 export function OverviewPage() {
@@ -51,6 +52,14 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
   }
   const chartData = isToday && live ? withLivePoint(buckets, live, axis.fromUtc) : buckets
   const liveAt = isToday ? (live?.ts ?? windows.current.toUtc) : null
+  const chartAxis = visibleAxis(axis, isToday, liveAt ?? windows.current.toUtc)
+  // Buckets are hourly, so the series would stop at the top of the hour and leave a gap before
+  // the LIVE marker. Extend it to "now" with the latest reading so the line meets the marker (Figma).
+  const lastPoint = chartData[chartData.length - 1]
+  const occupancySeries =
+    liveAt !== null && lastPoint && liveAt > lastPoint.utc
+      ? [...chartData, { ...lastPoint, utc: liveAt, avg: live ? live.value : lastPoint.avg }]
+      : chartData
 
   const footfall = q.footfall.data ? q.footfall.data.footfall + footfallExtra : null
   const dwell = q.dwell.data?.avgDwellMinutes ?? null
@@ -60,19 +69,19 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="overview-occupancy" className="flex flex-col gap-3">
-        <h2 id="overview-occupancy" className="text-[1.05rem] font-medium text-ink">
+        <h2 id="overview-occupancy" className="text-lg font-medium text-ink">
           Occupancy
         </h2>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-line">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card className="animate-card-in md:col-span-2">
+            <div className="grid grid-cols-1 gap-4 divide-line max-sm:divide-y sm:grid-cols-2 sm:gap-0 sm:divide-x">
               <Stat
                 label={isToday ? 'Live Occupancy' : 'Avg Occupancy'}
                 query={live ? null : q.occupancy}
                 value={occupancyValue === null ? null : fmt(occupancyValue)}
                 change={occupancyValue === null || occupancyBaseline === null ? null : percentChange(occupancyValue, occupancyBaseline)}
                 comparedTo={comparedTo}
-                className="sm:pr-6"
+                className="max-sm:pb-4 sm:pr-6"
               />
               <Stat
                 label={isToday ? "Today's Footfall" : 'Footfall'}
@@ -82,11 +91,11 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
                   footfall === null || !q.footfallPrev.data ? null : percentChange(footfall, q.footfallPrev.data.footfall)
                 }
                 comparedTo={comparedTo}
-                className="sm:pl-6"
+                className="max-sm:pt-4 sm:pl-6"
               />
             </div>
           </Card>
-          <Card>
+          <Card className="animate-card-in [animation-delay:60ms]">
             <Stat
               label="Avg Dwell Time"
               query={q.dwell}
@@ -97,11 +106,11 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
           </Card>
         </div>
 
-        <Card title="Overall Occupancy" actions={<LegendDot color={COLORS.occupancy}>Occupancy</LegendDot>}>
+        <Card className="animate-card-in [animation-delay:120ms]" title="Overall Occupancy" actions={<LegendDot color={COLORS.occupancy}>Occupancy</LegendDot>}>
           <QueryBody query={q.occupancy} skeletonClass="h-72" isEmpty={buckets.length === 0} empty="No occupancy data for this day.">
             <OccupancyChart
-              data={chartData}
-              axis={axis}
+              data={occupancySeries}
+              axis={chartAxis}
               timeZone={site.timezone}
               liveAt={liveAt}
               label={occupancySummary(chartData, site.timezone, isToday)}
@@ -111,11 +120,11 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
       </section>
 
       <section aria-labelledby="overview-demographics" className="flex flex-col gap-3">
-        <h2 id="overview-demographics" className="text-[1.05rem] font-medium text-ink">
+        <h2 id="overview-demographics" className="text-lg font-medium text-ink">
           Demographics
         </h2>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card title="Chart of Demographics">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card className="animate-card-in [animation-delay:180ms]" title="Chart of Demographics">
             <QueryBody query={q.demographics} skeletonClass="h-64" isEmpty={!share} empty="No demographic data for this day.">
               {share && (
                 <div className="flex flex-col items-center gap-4">
@@ -130,7 +139,7 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
           </Card>
           <Card
             title="Demographics Analysis"
-            className="lg:col-span-2"
+            className="animate-card-in [animation-delay:240ms] md:col-span-2"
             actions={
               <div className="flex items-center gap-3">
                 <LegendDot color={COLORS.male}>Male</LegendDot>
@@ -146,7 +155,7 @@ function OverviewContent({ site, windows }: { site: Site; windows: DayWindows })
             >
               <DemographicsChart
                 data={demoBuckets}
-                axis={axis}
+                axis={chartAxis}
                 timeZone={site.timezone}
                 label={`Hourly average male and female counts across ${demoBuckets.length} hours${
                   share ? `; overall ${share.male}% male, ${share.female}% female` : ''
@@ -202,14 +211,16 @@ function Stat({
   } else {
     body = (
       <>
-        <p className="text-[1.6rem] leading-tight font-medium text-ink">{value}</p>
+        <p className="text-2xl leading-6 font-medium tracking-[0.1px] text-ink-strong">
+          <AnimatedValue value={value} />
+        </p>
         <Trend change={change} comparedTo={comparedTo} />
       </>
     )
   }
   return (
-    <div className={`flex flex-col gap-2 ${className}`} aria-label={label} role="group">
-      <h3 className="text-[0.95rem] font-medium text-ink">{label}</h3>
+    <div className={`flex flex-col gap-3 ${className}`} aria-label={label} role="group">
+      <h3 className="text-base leading-none font-medium text-ink-strong">{label}</h3>
       {body}
     </div>
   )
@@ -217,16 +228,17 @@ function Stat({
 
 function Trend({ change, comparedTo }: { change: number | null; comparedTo: string }) {
   if (change === null) return null
-  if (change === 0) return <p className="text-sm text-ink-muted">Same as {comparedTo}</p>
+  if (change === 0) return <p className="text-sm leading-[14px] font-light text-ink-strong">Same as {comparedTo}</p>
   const up = change > 0
   const Icon = up ? TrendUpIcon : TrendDownIcon
+  // Figma: trend glyph on its own line, then 14px light copy.
   return (
-    <p className="flex items-center gap-1.5 text-sm text-ink-muted">
-      <Icon size={16} className={up ? 'text-up' : 'text-down'} />
-      <span>
+    <div className="flex flex-col gap-1.5">
+      <Icon size={18} className={`animate-pop ${up ? 'text-up' : 'text-down'}`} />
+      <p className="text-sm leading-[14px] font-light tracking-[0.1px] text-ink-strong">
         {Math.abs(change)}% {up ? 'More' : 'Less'} than {comparedTo}
-      </span>
-    </p>
+      </p>
+    </div>
   )
 }
 

@@ -49,11 +49,15 @@ function AlertsCenter({ siteId, timeZone }: { siteId: string | null; timeZone: s
         disabled={!siteId}
         className="relative rounded p-1.5 text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-brand-500"
       >
-        <BellIcon />
+        {/* Re-keyed per new alert so the wiggle and badge pop replay. */}
+        <span key={unread} className={`block origin-top ${unread > 0 ? 'animate-wiggle' : ''}`}>
+          <BellIcon />
+        </span>
         {unread > 0 && (
           <span
+            key={`badge-${unread}`}
             aria-hidden="true"
-            className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sev-high px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-white"
+            className="animate-pop absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sev-high px-1 text-[10px] leading-none font-semibold text-white ring-2 ring-white"
           >
             {unread > 9 ? '9+' : unread}
           </span>

@@ -33,7 +33,7 @@ function timeAxis(axis: TimeRange, timeZone: string) {
       dataKey="utc"
       scale="time"
       domain={[axis.fromUtc, axis.toUtc]}
-      ticks={dayTicks(axis.fromUtc, axis.toUtc)}
+      ticks={dayTicks(axis.fromUtc, axis.toUtc, axis.toUtc - axis.fromUtc <= 12 * 3_600_000 ? 1 : 2)}
       tickFormatter={(v: number) => formatHour(v, timeZone)}
       tick={AXIS_TICK}
       tickLine={false}
@@ -52,9 +52,17 @@ function countAxis() {
       axisLine={false}
       width={44}
       allowDecimals={false}
+      // ~30% headroom above the peak, rounded to a tidy step, so the line never hugs the top (Figma).
+      domain={[0, (max: number) => niceCeil(max * 1.3)]}
       label={{ value: 'Count', angle: -90, position: 'insideLeft', offset: 8, fontSize: 12, fill: COLORS.axis }}
     />
   )
+}
+
+function niceCeil(n: number) {
+  if (!Number.isFinite(n) || n <= 0) return 10
+  const step = 10 ** Math.floor(Math.log10(n)) / 2
+  return Math.ceil(n / step) * step
 }
 
 function tooltip(timeZone: string) {
